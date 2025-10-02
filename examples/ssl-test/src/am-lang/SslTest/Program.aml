@@ -9,13 +9,12 @@ namespace SslTest {
             "connect to localhost".println()
             var s = Socket.create(AddressFamily.inet, SocketType.stream, ProtocolFamily.unspecified)
 
-            var sslstream = new SslSocketStream(s, "github.com")
+            var sslStream = new SslSocketStream(s, "github.com")
 
             s.connect("localhost", 443)
             "connected".println()
 
-            var socketStream = new SslSocketStream(s)
-            var istream = socketStream as Stream
+            var istream = sslStream as Stream
             var ts = new TextStream(istream)
             ts.writeString("GET / HTTP/1.1\r\nHost:github.com\r\n\r\n")
 

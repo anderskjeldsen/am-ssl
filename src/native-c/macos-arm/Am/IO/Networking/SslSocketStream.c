@@ -5,7 +5,6 @@
 #include <Am/Lang/Object.h>
 #include <Am/IO/Networking/Socket.h>
 #include <Am/Lang/String.h>
-#include <Am/IO/Networking/SslCert.h>
 #include <Am/Lang/Int.h>
 #include <Am/Lang/Array.h>
 #include <Am/Lang/Byte.h>
