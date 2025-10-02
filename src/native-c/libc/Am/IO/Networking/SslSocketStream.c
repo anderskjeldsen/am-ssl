@@ -135,6 +135,14 @@ __exit: ;
 	return __result;
 };
 
+function_result Am_IO_Networking_SslSocketStream__native_mark_children_0(aobject * const this)
+{
+	function_result __result = { .has_return_value = false };
+__exit: ;
+	return __result;
+};
+
+
 function_result Am_IO_Networking_SslSocketStream_read_0(aobject * const this, aobject * buffer, long long offset, int length)
 {
 	function_result __result = { .has_return_value = true };
