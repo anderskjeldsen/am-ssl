@@ -6,16 +6,15 @@ namespace SslTest {
         import Am.IO.Networking
 
         static fun main() {
-            "connect to localhost".println()
+            "connect to github".println()
             var s = Socket.create(AddressFamily.inet, SocketType.stream, ProtocolFamily.unspecified)
-
-            var sslStream = new SslSocketStream(s, "github.com")
-
-            s.connect("localhost", 443)
+            s.connect("github.com", 443)
             "connected".println()
 
-            var istream = sslStream as Stream
-            var ts = new TextStream(istream)
+            var sslStream = new SslSocketStream(s, "github.com")
+            "ssl stream created".println()
+
+            var ts = new TextStream(sslStream)
             ts.writeString("GET / HTTP/1.1\r\nHost:github.com\r\n\r\n")
 
             var rs = ts.readString()
