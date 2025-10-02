@@ -1,11 +1,12 @@
 
-namespace Am.IO.Networking
+namespace Am.Net.Ssl
 {
 
     native class SslSocketStream(private var socket: Socket, private var hostName: String) : Stream
     {
         import Am.Lang
         import Am.IO
+        import Am.IO.Networking
 
         native fun read(buffer: Byte[], offset: Long, length: Int): Int
 
