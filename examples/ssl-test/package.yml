@@ -45,6 +45,8 @@ platforms:
     additionalIncludePaths:
     gccAdditionalOptions:
     gccAdditionalLibraries:
+      - ssl
+      - crypto
   - id: linux-x64
     extends: libc
     gccCommand: gcc -O3
@@ -54,6 +56,9 @@ platforms:
     additionalIncludePaths:
     gccAdditionalOptions:
     gccAdditionalLibraries:
+      - ssl
+      - crypto
+
 
 buildTargets:
   - id: amigaos_docker
