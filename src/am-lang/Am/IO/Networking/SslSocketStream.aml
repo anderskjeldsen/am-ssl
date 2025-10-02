@@ -6,6 +6,7 @@ namespace Am.IO.Networking
     {
         import Am.Lang
         import Am.IO
+        import Am.Net
 
         native fun read(buffer: Byte[], offset: Long, length: Int): Int
 
