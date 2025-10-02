@@ -4,3 +4,5 @@ builds/*
 .DS_Store
 c-libs/AmiSSL*
 c-libs/openssl
+amlc.jar
+examples/*/builds

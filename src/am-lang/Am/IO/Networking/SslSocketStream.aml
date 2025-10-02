@@ -2,7 +2,7 @@
 namespace Am.IO.Networking
 {
 
-    native class SslSocketStream(private var socket: Socket, private var hostName: String, private var cert: SslCert) : Stream
+    native class SslSocketStream(private var socket: Socket, private var hostName: String) : Stream
     {
         import Am.Lang
         import Am.IO
