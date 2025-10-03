@@ -1,6 +1,6 @@
 #include <libc/core.h>
-#include <Am/IO/Networking/SslSocketStream.h>
-#include <libc/Am/IO/Networking/SslSocketStream.h>
+#include <Am/Net/Ssl/SslSocketStream.h>
+#include <libc/Am/Net/Ssl/SslSocketStream.h>
 #include <Am/IO/Stream.h>
 #include <Am/Lang/Object.h>
 #include <Am/Net/Socket.h>
@@ -10,10 +10,10 @@
 #include <Am/Lang/Long.h>
 #include <Am/Lang/Exception.h>
 #include <Am/Lang/String.h>
-#include <libc/Am/IO/Networking/SslSocketStream.h>
+#include <libc/Am/Net/Ssl/SslSocketStream.h>
 #include <libc/core_inline_functions.h>
 
-function_result Am_IO_Networking_SslSocketStream__native_init_0(aobject * const this)
+function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
 {
 	function_result __result = { .has_return_value = false };
 	bool __returning = false;
@@ -27,18 +27,18 @@ function_result Am_IO_Networking_SslSocketStream__native_init_0(aobject * const 
 
 	SSL_CTX *ssl_ctx = SSL_CTX_new(TLS_client_method());
     if (ssl_ctx == NULL) {
-		__throw_simple_exception("Failed to create SSL context", "in Am_IO_Networking_SslSocketStream__native_init_0", &__result);
+		__throw_simple_exception("Failed to create SSL context", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
 		goto __exit;
     }
 
 /*
 	// get cert object
-	aobject * const cert_object = this->object_properties.class_object_properties.properties[Am_IO_Networking_SslSocketStream_P_cert].nullable_value.value.object_value;
+	aobject * const cert_object = this->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_cert].nullable_value.value.object_value;
 	// get host name string_holder
 	string_holder * const cert_object_string_holder = cert_object->object_properties.class_object_properties.object_data.value.custom_value;
 
 	if (SSL_CTX_load_verify_mem(ssl_ctx, cert_object_string_holder->string_value, cert_object_string_holder->length) != 1) {
-		__throw_simple_exception("Failed to load cacert.pem", "in Am_IO_Networking_SslSocketStream__native_init_0", &__result);
+		__throw_simple_exception("Failed to load cacert.pem", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
 		goto __fail2;
 	}
 	*/
@@ -47,51 +47,51 @@ function_result Am_IO_Networking_SslSocketStream__native_init_0(aobject * const 
 
 	// Load default trusted CA certificates
 	if (!SSL_CTX_set_default_verify_paths(ssl_ctx)) {
-		__throw_simple_exception("Failed to set default verify paths", "in Am_IO_Networking_SslSocketStream__native_init_0", &__result);
+		__throw_simple_exception("Failed to set default verify paths", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
 		goto __fail2;
 	}
 
 
     SSL *ssl = SSL_new(ssl_ctx);
     if (ssl == NULL) {
-		__throw_simple_exception("Failed to create SSL", "in Am_IO_Networking_SslSocketStream__native_init_0", &__result);
+		__throw_simple_exception("Failed to create SSL", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
 		goto __fail2;
     }
 
 	// get socket object
-	aobject * const socket = this->object_properties.class_object_properties.properties[Am_IO_Networking_SslSocketStream_P_socket].nullable_value.value.object_value;
+	aobject * const socket = this->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_socket].nullable_value.value.object_value;
 	// get socket fd
 	int s = socket->object_properties.class_object_properties.object_data.value.int_value;
 
     if (!SSL_set_fd(ssl, s)) {
-		__throw_simple_exception("Failed to set SSL file descriptor", "in Am_IO_Networking_SslSocketStream__native_init_0", &__result);
+		__throw_simple_exception("Failed to set SSL file descriptor", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
 		goto __fail3;
     }	
 
 	// get host name
-	aobject * const host_name = this->object_properties.class_object_properties.properties[Am_IO_Networking_SslSocketStream_P_hostName].nullable_value.value.object_value;
+	aobject * const host_name = this->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_hostName].nullable_value.value.object_value;
 	// get host name string_holder
 	string_holder * const host_name_string_holder = host_name->object_properties.class_object_properties.object_data.value.custom_value;
 
 	if (!SSL_set_tlsext_host_name(ssl, host_name_string_holder->string_value)) {
-		__throw_simple_exception("Failed to set SSL host name", "in Am_IO_Networking_SslSocketStream__native_init_0", &__result);
+		__throw_simple_exception("Failed to set SSL host name", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
 		goto __fail4;
 	}
 
     if (SSL_connect(ssl) != 1) {
-		__throw_simple_exception("Failed to do SSL handshake", "in Am_IO_Networking_SslSocketStream__native_init_0", &__result);
+		__throw_simple_exception("Failed to do SSL handshake", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
 		goto __fail4;
     }
 
     X509 *cert = SSL_get_peer_certificate(ssl);
     if (cert == NULL) {
-		__throw_simple_exception("Failed to retrieve server certificate", "in Am_IO_Networking_SslSocketStream__native_init_0", &__result);
+		__throw_simple_exception("Failed to retrieve server certificate", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
 		goto __fail4;
     }
 
     long verify_result = SSL_get_verify_result(ssl);
     if (verify_result != X509_V_OK) {
-		__throw_simple_exception("Certificate verification failed", "in Am_IO_Networking_SslSocketStream__native_init_0", &__result);
+		__throw_simple_exception("Certificate verification failed", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
 		goto __fail5;
     }
 
@@ -117,7 +117,7 @@ __exit: ;
 	return __result;
 };
 
-function_result Am_IO_Networking_SslSocketStream__native_release_0(aobject * const this)
+function_result Am_Net_Ssl_SslSocketStream__native_release_0(aobject * const this)
 {
 	function_result __result = { .has_return_value = false };
 	bool __returning = false;
@@ -135,7 +135,7 @@ __exit: ;
 	return __result;
 };
 
-function_result Am_IO_Networking_SslSocketStream__native_mark_children_0(aobject * const this)
+function_result Am_Net_Ssl_SslSocketStream__native_mark_children_0(aobject * const this)
 {
 	function_result __result = { .has_return_value = false };
 __exit: ;
@@ -143,7 +143,7 @@ __exit: ;
 };
 
 
-function_result Am_IO_Networking_SslSocketStream_read_0(aobject * const this, aobject * buffer, long long offset, int length)
+function_result Am_Net_Ssl_SslSocketStream_read_0(aobject * const this, aobject * buffer, long long offset, int length)
 {
 	function_result __result = { .has_return_value = true };
 	bool __returning = false;
@@ -181,7 +181,7 @@ __exit: ;
 	return __result;
 };
 
-function_result Am_IO_Networking_SslSocketStream_write_0(aobject * const this, aobject * buffer, long long offset, int length)
+function_result Am_Net_Ssl_SslSocketStream_write_0(aobject * const this, aobject * buffer, long long offset, int length)
 {
 	function_result __result = { .has_return_value = false };
 	bool __returning = false;

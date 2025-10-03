@@ -1,9 +1,9 @@
 #include <libc/core.h>
-#include <Am/IO/Networking/SslSocketStream.h>
-#include <morphos-ppc/Am/IO/Networking/SslSocketStream.h>
+#include <Am/Net/Ssl/SslSocketStream.h>
+#include <morphos-ppc/Am/Net/Ssl/SslSocketStream.h>
 #include <Am/IO/Stream.h>
 #include <Am/Lang/Object.h>
-#include <Am/IO/Networking/Socket.h>
+#include <Am/Net/Socket.h>
 #include <Am/Lang/String.h>
 #include <Am/Lang/Int.h>
 #include <Am/Lang/Array.h>
