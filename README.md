@@ -44,22 +44,31 @@ dependencies:
 Here's a simple example that connects to a server over HTTPS:
 
 ```am
-import Am.Lang
-import Am.IO
-import Am.Net
-import Am.IO.Networking
+namespace SslTest {
+    class Program {
+        import Am.Lang
+        import Am.IO
+        import Am.Net
+        import Am.Net.Ssl
 
-var socket = Socket.create(AddressFamily.inet, SocketType.stream, ProtocolFamily.unspecified)
-socket.connect("github.com", 443)
+        static fun main() {
+            "connect to github".println()
+            var s = Socket.create(AddressFamily.inet, SocketType.stream, ProtocolFamily.unspecified)
+            s.connect("github.com", 443)
+            "connected".println()
 
-var sslStream = new SslSocketStream(socket, "github.com")
-var textStream = new TextStream(sslStream)
+            var sslStream = new SslSocketStream(s, "github.com")
+            "ssl stream created".println()
 
-textStream.writeString("GET / HTTP/1.1\r\nHost:github.com\r\n\r\n")
-var response = textStream.readString()
-response.println()
+            var ts = new TextStream(sslStream)
+            ts.writeString("GET / HTTP/1.1\r\nHost:github.com\r\n\r\n")
 
-socket.close()
+            var rs = ts.readString()
+            rs.println()        
+            s.close()    
+        }
+    }
+}
 ```
 
 For a complete working example, see the [ssl-test example](examples/ssl-test).
