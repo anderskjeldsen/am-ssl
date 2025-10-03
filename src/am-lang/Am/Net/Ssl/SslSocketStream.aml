@@ -1,5 +1,5 @@
 
-namespace Am.IO.Networking
+namespace Am.Net.Ssl
 {
 
     native class SslSocketStream(private var socket: Socket, private var hostName: String) : Stream

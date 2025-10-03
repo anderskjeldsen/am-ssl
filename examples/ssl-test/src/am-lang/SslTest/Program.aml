@@ -3,7 +3,7 @@ namespace SslTest {
         import Am.Lang
         import Am.IO
         import Am.Net
-        import Am.IO.Networking
+        import Am.Net.Ssl
 
         static fun main() {
             "connect to github".println()
