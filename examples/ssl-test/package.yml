@@ -16,11 +16,13 @@ dependencies:
     branch: master
     url: https://github.com/anderskjeldsen/am-net.git
   - id: am-ssl
-    realm: github
-    type: git-repo
-    tag: latest
+    type: local
+    path: ../../
+#    realm: github
+#    type: git-repo
+#    tag: latest
 #    branch: master
-    url: https://github.com/anderskjeldsen/am-ssl.git
+#    url: https://github.com/anderskjeldsen/am-ssl.git
 platforms:
   - id: libc
     abstract: true
