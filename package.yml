@@ -48,7 +48,7 @@ platforms:
       - ssl
       - crypto
   - id: macos-arm
-    extends: macos
+    extends: libc
     gccCommand: gcc
     additionalIncludePaths:
       - /opt/homebrew/opt/openssl/include
