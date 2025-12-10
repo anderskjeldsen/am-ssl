@@ -23,10 +23,20 @@ platforms:
     extends: libc
     gccCommand: m68k-amigaos-gcc
     additionalHeaders:
-    additionalCSources: 
+    additionalCSources:
+      - inputFilename: errno.c     
+        outputFilename: errno.o
     gccAdditionalOptions:
+#      - -mcrt=libnix
+#      - -noixemul     
+    additionalIncludePaths:
+      - /opt/amiga/m68k-amigaos/AmiSSL/include
+#      - c-libs/amissl/include
+    gccLibraryPaths:
+      - /opt/amiga/m68k-amigaos/AmiSSL/lib/AmigaOS3
+#      - c-libs/amissl/lib
     gccAdditionalLibraries:
-      - socket
+#      - socket
       - amisslstubs
       - amisslauto
   - id: linux-x64
@@ -70,19 +80,11 @@ platforms:
     gccAdditionalOptions:
       - -noixemul
 buildTargets:
-  - id: amigaos_docker_win
+  - id: amigaos_docker
     platform: amigaos
-    commands:
-      - docker run -v ${build_dir}:/host -i kjeldsenanders/dnf-dev:initial-x86 make -f amigaos.makefile -C /host all
-  - id: amigaos_docker_matebook
-    platform: amigaos
-    commands:
-      - docker run -v ${build_dir}:/host kjeldsenanders/dnf-dev:initial-x86 make -f amigaos.makefile -C /host ${make_target}
-#      - docker run -v ${build_dir}:/host -i 265cc923e013 make -f amigaos.makefile -C /host all
-  - id: amigaos_docker_macm1
-    platform: amigaos
-    commands:
-      - docker run -v ${build_dir}:/host -i kjeldsenanders/dnf-dev:initial-x86 make -f amigaos.makefile -C /host all
+    dockerBuild:
+      image: amiga-gcc
+      buildPath: /host
   - id: macos
     platform: macos
     commands:

@@ -9,7 +9,7 @@ build:
 	$(CMD) build . -bt linux-x64 -ll5 -maxOneError
 
 build-amigaos:
-	$(CMD) build . -bt amigaos-docker -ll5
+	$(CMD) build . -bt amigaos_docker -ll5
 
 build-macos-arm:
 	$(CMD) build . -bt macos-arm -ll5 -maxOneError -fld
