@@ -4,15 +4,26 @@ version: 0.1.0
 type: library
 dependencies:
   - id: am-lang-core
-    realm: github
-    type: git-repo
-    tag: latest
-    url: https://github.com/anderskjeldsen/am-lang-core.git
+#    realm: github
+#    type: git-repo
+#    tag: latest
+#    branch: master
+#    url: https://github.com/anderskjeldsen/am-lang-core.git
+    type: local
+    path: ../am-lang-core
+    features: ["floatingPoint"]
   - id: am-net
     realm: github
     type: git-repo
     tag: latest
+    branch: master
     url: https://github.com/anderskjeldsen/am-net.git
+  - id: am-tests
+    testOnly: true
+    realm: github
+    type: git-repo
+    tag: latest
+    url: https://github.com/anderskjeldsen/am-tests.git
 
 platforms:
   - id: libc
