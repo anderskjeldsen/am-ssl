@@ -60,13 +60,7 @@ platforms:
       - -noixemul
     additionalLinkerFlags:
       - -noixemul
-    additionalIncludePaths:
-      - /opt/amiga/m68k-amigaos/AmiSSL/include
-    gccLibraryPaths:
-      - /opt/amiga/m68k-amigaos/AmiSSL/lib/AmigaOS3
     gccAdditionalLibraries:
-      - amisslstubs
-      - amisslauto
 
 buildTargets:
   - id: linux-x64

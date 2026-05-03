@@ -5,6 +5,9 @@ CMD=java -jar $(AMLC)
 build:
 	$(CMD) build . -bt linux-x64
 
+build-amigaos:
+	$(CMD) build . -bt amigaos_docker
+
 build-force-deps:
 	$(CMD) build . -fld -bt linux-x64 ll 4
 

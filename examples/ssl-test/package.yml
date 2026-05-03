@@ -36,8 +36,9 @@ platforms:
     additionalIncludePaths:
     gccAdditionalOptions:
       - -noixemul     
+    additionalLinkerFlags:
+      - -noixemul
     gccAdditionalLibraries:
-      - socket
   - id: macos
     extends: libc
     gccCommand: gcc -O3
