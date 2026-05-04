@@ -1,16 +1,14 @@
 
 id: am-ssl
-version: 0.1.0
+version: 0.10.0
 type: library
 dependencies:
   - id: am-lang-core
-#    realm: github
-#    type: git-repo
-#    tag: latest
-#    branch: master
-#    url: https://github.com/anderskjeldsen/am-lang-core.git
-    type: local
-    path: ../am-lang-core
+    realm: github
+    type: git-repo
+    tag: latest
+    branch: master
+    url: https://github.com/anderskjeldsen/am-lang-core.git
     features: ["floatingPoint"]
   - id: am-net
     realm: github
