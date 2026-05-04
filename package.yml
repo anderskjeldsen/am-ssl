@@ -51,11 +51,7 @@ platforms:
     gccAdditionalLibraries:
 #      - socket
       - amisslstubs
-# amisslauto deliberately not linked — its destructor (called by the
-# C runtime after main returns) hangs the system on m68k shutdown
-# when combined with the AmLang runtime. Manual lazy init lives in
-# src/native-c/amigaos/amissl_init.c, called by every consumer.
-#      - amisslauto
+      - amisslauto
   - id: linux-x64
     extends: libc
     gccCommand: gcc
