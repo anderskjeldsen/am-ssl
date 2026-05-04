@@ -9,11 +9,12 @@ namespace Am.Crypto
     // wire protocols (mysql_native_password, Git object IDs, etc.) — that
     // is the use case this primitive targets.
     //
-    // The implementation lives in `src/native-c/libc/` and is shared by
-    // every concrete platform that descends from `libc`. The
-    // `#implementationPlatforms "libc"` directive tells the build system
-    // not to look for per-platform stubs.
-    #implementationPlatforms "libc"
+    // For libc-derived platforms (linux, macos, etc.) the impl lives in
+    // `src/native-c/libc/` and uses the system OpenSSL via -lssl -lcrypto.
+    // AmigaOS has its own file under `src/native-c/amigaos/` because it
+    // needs explicit AmiSSL master library setup — `-lamisslauto`'s
+    // implicit destructor freezes the m68k system on shutdown.
+    #implementationPlatforms "libc", "amigaos"
     native class Sha1
     {
         import Am.Lang

@@ -1,0 +1,12 @@
+namespace Am.Crypto
+{
+    // This class exists to hold the native library handler for the
+    // AmCrypto package. The handler is shared by all crypto primitives
+    // and is responsible for loading the OpenSSL/AmiSSL library on
+    // platforms that require it (amigaos).
+    #implementationPlatforms "libc", "amigaos"
+    native class NativeLibraryHandler
+    {
+        private const handler: NativeLibraryHandler = new NativeLibraryHandler()
+    }
+}
