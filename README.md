@@ -81,6 +81,10 @@ For a complete working example, see the [ssl-test example](examples/ssl-test).
 - **MorphOS PPC** - Cross-compiled support
 - **AROS x86-64** - Cross-compiled support
 
+### MorphOS note
+
+For smaller MorphOS binaries, use shared OpenSSL linkage (`-lssl_shared -lcrypto_shared`) instead of static linkage (`-lssl -lcrypto`). In this project, that reduced `ssl-test` from about 5.6 MB to about 1.2 MB and links against `openssl3.library` at runtime.
+
 ## Building
 
 ### Requirements

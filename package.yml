@@ -1,6 +1,6 @@
 
 id: am-ssl
-version: 0.10.0
+version: 0.10.1
 type: library
 dependencies:
   - id: am-lang-core
@@ -82,9 +82,15 @@ platforms:
       - crypto
   - id: morphos-ppc
     extends: libc
-    gccCommand: ppc-morphos-gcc
+    gccCommand: ppc-morphos-gcc -O3
     gccAdditionalOptions:
       - -noixemul
+    additionalLinkerFlags:
+      - -noixemul
+    gccAdditionalLibraries:
+      - ssl_shared
+      - crypto_shared
+      - atomic
   - id: aros-x86-64
     extends: libc
     gccCommand: gcc

@@ -16,13 +16,11 @@ dependencies:
     branch: master
     url: https://github.com/anderskjeldsen/am-net.git
   - id: am-ssl
-    type: local
-    path: ../../
-#    realm: github
-#    type: git-repo
-#    tag: latest
-#    branch: master
-#    url: https://github.com/anderskjeldsen/am-ssl.git
+    realm: github
+    type: git-repo
+    tag: latest
+    branch: master
+    url: https://github.com/anderskjeldsen/am-ssl.git
 platforms:
   - id: libc
     abstract: true
@@ -50,6 +48,14 @@ platforms:
     gccAdditionalLibraries:
       - ssl
       - crypto
+  - id: morphos-ppc
+    extends: libc
+    gccCommand: ppc-morphos-gcc -O3
+    gccAdditionalOptions:
+      - -noixemul
+    additionalLinkerFlags:
+      - -noixemul
+    gccAdditionalLibraries:
   - id: linux-x64
     extends: libc
     gccCommand: gcc -O3
@@ -69,5 +75,10 @@ buildTargets:
       buildPath: /host
   - id: macos
     platform: macos
+  - id: morphos-ppc_docker
+    platform: morphos-ppc
+    dockerBuild:
+      image: amigadev/crosstools:ppc-morphos
+      buildPath: /work
   - id: linux-x64
     platform: linux-x64

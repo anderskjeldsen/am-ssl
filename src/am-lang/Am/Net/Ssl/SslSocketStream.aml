@@ -2,12 +2,7 @@
 namespace Am.Net.Ssl
 {
 
-    // libc-derived targets (linux, macos, etc.) use the system OpenSSL via
-    // -lssl -lcrypto. AmigaOS has its own implementation file that calls
-    // amissl_ensure_initialised() before any SSL_* call, since we don't
-    // link -lamisslauto on m68k (its destructor freezes the system on
-    // shutdown when combined with the AmLang runtime).
-    #implementationPlatforms "libc", "amigaos"
+    #implementationPlatforms "libc", "amigaos", "morphos-ppc"
     native class SslSocketStream(private var socket: Socket, private var hostName: String) : Stream
     {
         import Am.Lang
