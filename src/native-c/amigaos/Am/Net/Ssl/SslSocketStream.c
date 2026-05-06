@@ -49,59 +49,45 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
         __increase_reference_count(this);
     }
 
-    // Breadcrumbs to localise the crash that's happening somewhere
-    // in this function. Each step prints + flushes BEFORE the call,
-    // so whatever step the user sees as the LAST printed line is
-    // the one that crashed mid-call.
-    printf("ssl_init: amissl_ensure_initialised...\n"); fflush(stdout);
     if (!amissl_ensure_initialised()) {
         __throw_simple_exception("Failed to initialise AmiSSL", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __exit;
     }
 
-    printf("ssl_init: SSL_CTX_new...\n"); fflush(stdout);
     ssl_ctx = SSL_CTX_new(TLS_client_method());
     if (ssl_ctx == NULL) {
         __throw_simple_exception("Failed to create SSL context", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __exit;
     }
 
-    printf("ssl_init: SSL_CTX_set_verify...\n"); fflush(stdout);
     SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, NULL);
 
-    printf("ssl_init: SSL_CTX_set_default_verify_paths...\n"); fflush(stdout);
     if (!SSL_CTX_set_default_verify_paths(ssl_ctx)) {
         __throw_simple_exception("Failed to set default verify paths", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __fail2;
     }
 
-    printf("ssl_init: SSL_new...\n"); fflush(stdout);
     ssl = SSL_new(ssl_ctx);
     if (ssl == NULL) {
         __throw_simple_exception("Failed to create SSL", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __fail2;
     }
 
-    printf("ssl_init: read socket fd from AmLang object...\n"); fflush(stdout);
     socket_obj = this->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_socket].nullable_value.value.object_value;
     s = socket_obj->object_properties.class_object_properties.object_data.value.int_value;
-    printf("ssl_init: socket fd=%d, SSL_set_fd...\n", s); fflush(stdout);
 
     if (!SSL_set_fd(ssl, s)) {
         __throw_simple_exception("Failed to set SSL file descriptor", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __fail3;
     }
 
-    printf("ssl_init: read hostName from AmLang object...\n"); fflush(stdout);
     host_name = this->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_hostName].nullable_value.value.object_value;
     host_name_string_holder = host_name->object_properties.class_object_properties.object_data.value.custom_value;
-    printf("ssl_init: hostName='%s', SSL_set_tlsext_host_name...\n", host_name_string_holder->string_value); fflush(stdout);
 
     if (!SSL_set_tlsext_host_name(ssl, host_name_string_holder->string_value)) {
         __throw_simple_exception("Failed to set SSL host name", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __fail4;
     }
-    printf("ssl_init: SSL_connect...\n"); fflush(stdout);
 
     {
         int connect_rc = SSL_connect(ssl);

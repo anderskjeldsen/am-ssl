@@ -164,8 +164,6 @@ function_result Am_Net_Ssl_SslSocketStream_read_0(aobject * const this, aobject 
 		}
 
 		int received = SSL_read(holder->ssl, array_holder->array_data, length);
-//		printf("Received %d bytes\n", received);
-		//	printf("Received data: %s\n", array_holder->array_data);
 		__result.return_value.value.int_value = received;
 		__result.return_value.flags = PRIMITIVE_INT;
 		__returning = true;
@@ -201,8 +199,6 @@ function_result Am_Net_Ssl_SslSocketStream_write_0(aobject * const this, aobject
 			__returning = true;
 			goto __exit;
 		}
-
-//		printf("Sending: %s\n", array_holder->array_data);
 		int sent = SSL_write(holder->ssl, array_holder->array_data, length);
 		__result.return_value.value.int_value = sent;
 		__result.return_value.flags = PRIMITIVE_UINT;
