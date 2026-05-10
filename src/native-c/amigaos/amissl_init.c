@@ -9,7 +9,7 @@
 // ClientHello). Verified by stripping ssl-c-test down to match
 // https.c.
 //
-// So `amissl_ensure_initialised()` here is a thin idempotent wrapper
+// So `am_ssl_amissl_ensure_initialised()` here is a thin idempotent wrapper
 // that calls:
 //   1) OPENSSL_init_ssl with ADD_ALL_CIPHERS|ADD_ALL_DIGESTS — populates
 //      the EVP cipher table.
@@ -30,15 +30,6 @@
 #include <openssl/crypto.h>
 #include <stdlib.h>    // rand()
 
-// AmigaOS shell "magic stack cookie" — when the binary is launched
-// from the shell, AmigaOS scans the program's data section for the
-// string "$STACK:N" and uses N as the per-process stack size. Default
-// stack on m68k is around 4 KB which is way too small for OpenSSL's
-// TLS handshake; 32 KB is a comfortable margin.
-const char __amissl_stack_cookie[] = "$STACK:32768";
-
-static int openssl_initialised = 0;
-
 static void seed_rand(void)
 {
     unsigned char buf[256];
@@ -49,19 +40,13 @@ static void seed_rand(void)
     RAND_seed(buf, sizeof(buf));
 }
 
-int amissl_ensure_initialised(void)
+int am_ssl_amissl_ensure_initialised(void)
 {
-    if (openssl_initialised) {
-        return 1;
-    }
-
     OPENSSL_init_ssl(
         OPENSSL_INIT_SSL_DEFAULT
         | OPENSSL_INIT_ADD_ALL_CIPHERS
         | OPENSSL_INIT_ADD_ALL_DIGESTS,
         NULL);
     seed_rand();
-
-    openssl_initialised = 1;
     return 1;
 }

@@ -1,0 +1,19 @@
+
+namespace Am.Net.Ssl
+{
+    class SslPrivate
+    {
+        import Am.Lang
+
+        private static fun openSslInitialized(): Bool {
+            if (!Runtime.has("openssl-initialized")) {
+                return false
+            }
+            return Runtime.get("openssl-initialized") == "true"
+        }
+
+        private static fun setOpenSslInitialized() {
+            Runtime.set("openssl-initialized", "true")
+        }
+    }    
+}

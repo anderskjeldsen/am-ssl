@@ -15,6 +15,9 @@
 #include <amigaos/amissl_init.h>
 #include <stdio.h>
 
+function_result Am_Net_Ssl_SslPrivate_f_openSslInitialized_0(void);
+function_result Am_Net_Ssl_SslPrivate_f_setOpenSslInitialized_0(void);
+
 // AmigaOS m68k SslSocketStream implementation against AmiSSL.
 //
 // Same shape as the libc version (src/native-c/libc/Am/Net/Ssl/SslSocketStream.c)
@@ -23,7 +26,7 @@
 // difference is the bring-up: -lamisslauto isn't linked on m68k (its
 // destructor freezes the system on shutdown when combined with the
 // AmLang runtime), so each `_native_init_0` calls
-// amissl_ensure_initialised() first. SSL_library_init() /
+// am_ssl_amissl_ensure_initialised() first. SSL_library_init() /
 // SSL_load_error_strings() aren't needed — AmiSSL initialises its
 // OpenSSL globals at OpenAmiSSLTags() time.
 //
@@ -49,9 +52,15 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
         __increase_reference_count(this);
     }
 
-    if (!amissl_ensure_initialised()) {
-        __throw_simple_exception("Failed to initialise AmiSSL", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
-        goto __exit;
+    {
+        function_result openssl_state = Am_Net_Ssl_SslPrivate_f_openSslInitialized_0();
+        if (!openssl_state.return_value.value.bool_value) {
+            if (!am_ssl_amissl_ensure_initialised()) {
+                __throw_simple_exception("Failed to initialise AmiSSL", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
+                goto __exit;
+            }
+            Am_Net_Ssl_SslPrivate_f_setOpenSslInitialized_0();
+        }
     }
 
     ssl_ctx = SSL_CTX_new(TLS_client_method());

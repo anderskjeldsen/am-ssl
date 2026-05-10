@@ -11,6 +11,6 @@
 // API. Returns 1 on success. (Currently always succeeds; the int
 // return is kept so consumers can guard a graceful failure path if a
 // future implementation needs to.)
-int amissl_ensure_initialised(void);
+int am_ssl_amissl_ensure_initialised(void);
 
 #endif
