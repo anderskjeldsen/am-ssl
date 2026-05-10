@@ -33,11 +33,13 @@ platforms:
     gccCommand: m68k-amigaos-gcc
     additionalHeaders:
       - filename: amissl_init.h
+    # `errno.o` is owned by am-lang-core now (every app gets one copy
+    # via the universal core dep). The amissl_init bring-up still lives
+    # here because its function name is am-ssl-prefixed and is only
+    # called from this library's SslSocketStream.c.
     additionalCSources:
-      - inputFilename: errno.c
-        outputFilename: errno.o
       - inputFilename: amissl_init.c
-        outputFilename: amissl_init.o
+        outputFilename: am_ssl_amissl_init.o
     gccAdditionalOptions:
       - -noixemul     
     additionalLinkerFlags:
