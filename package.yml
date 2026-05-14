@@ -14,7 +14,7 @@ dependencies:
     realm: github
     type: git-repo
     tag: latest
-    branch: master
+#    branch: master
     url: https://github.com/anderskjeldsen/am-net.git
   - id: am-tests
     testOnly: true
