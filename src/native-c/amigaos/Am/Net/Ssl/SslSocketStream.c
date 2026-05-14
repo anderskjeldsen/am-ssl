@@ -12,7 +12,7 @@
 #include <Am/Lang/Exception.h>
 #include <libc/core_inline_functions.h>
 
-#include <amigaos/amissl_init.h>
+#include <amigaos/am_ssl_amissl_init.h>
 #include <stdio.h>
 
 function_result Am_Net_Ssl_SslPrivate_f_openSslInitialized_0(void);

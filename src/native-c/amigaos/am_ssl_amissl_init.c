@@ -23,7 +23,7 @@
 // defines SocketBase, so when both are linked everyone shares the same
 // global through amisslauto's strong-after-link resolution.
 
-#include <amigaos/amissl_init.h>
+#include <amigaos/am_ssl_amissl_init.h>
 
 #include <openssl/ssl.h>
 #include <openssl/rand.h>
