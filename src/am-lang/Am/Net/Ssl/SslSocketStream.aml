@@ -8,13 +8,14 @@ namespace Am.Net.Ssl
         import Am.Lang
         import Am.IO
         import Am.Net
+        import Am.Threading
 
         native fun read(buffer: Byte[], offset: Long, length: Int): Int
 
         native fun write(buffer: Byte[], offset: Long, length: Int)
 
         fun seekFromStart(offset: Long) {
-            throw new Exception("Not supported")            
+            throw new Exception("Not supported")
         }
 
         fun readByte(): Int {
@@ -25,5 +26,43 @@ namespace Am.Net.Ssl
         fun writeByte(byte: Int) {
             throw new Exception("Not supported")
         }
-    }    
+
+        // Per-thread AmiSSL bookkeeping hook. Called by the amigaos /
+        // morphos-ppc native side the first time the current AmigaOS
+        // task brings up an SslSocketStream — after that task has done
+        // its own `OpenLibrary("amisslmaster.library", …)` +
+        // `OpenAmiSSL()` + `InitAmiSSL(…)`. We register a finalizer so
+        // that when the AmLang worker thread ends, the matching
+        // `CleanupAmiSSL` + `CloseAmiSSL` + `CloseLibrary` runs from
+        // inside the same task — that's what AmiSSL tracks via
+        // `FindTask(NULL)`. Mirror of `Am.Net.Socket.nativeInit`; same
+        // private-by-convention rule applies.
+        private static fun nativeInit() {
+            var t = Thread.getCurrent()
+            if (t != null) {
+                var fn: () => Bool = () => {
+                    SslSocketStream.closeAmiSSLForThread()
+                    return true
+                }
+                t.addFinalizer(fn)
+            }
+        }
+
+        // Counterpart of `nativeInit`'s per-task AmiSSL bring-up. The
+        // Thread finalizer fires from inside the worker task, so the
+        // `FindTask(NULL)` lookup resolves to the task that opened.
+        private static native fun closeAmiSSLForThread()
+
+        // Force the AmiSSL/OpenSSL one-shot global init to happen on
+        // the *calling* task. Required on AmigaOS m68k when the first
+        // SSL operation will happen on a worker task — calling
+        // `OPENSSL_init_ssl` from a worker hangs (even with per-task
+        // amissl already brought up). Call this once from main task
+        // at program start (or before scheduling SSL work to a
+        // worker) and worker-side SSL ops will proceed.
+        //
+        // No-op on libc backends (the OpenSSL global init they use
+        // works fine from any thread). amigaos / morphos-ppc only.
+        static native fun warmCurrentTask()
+    }
 }

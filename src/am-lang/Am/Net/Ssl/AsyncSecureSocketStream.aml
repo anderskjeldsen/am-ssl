@@ -1,0 +1,254 @@
+
+namespace Am.Net.Ssl
+{
+    // Suspend-friendly wrapper around SslSocketStream — mirrors the
+    // shape of AsyncSocketStream. Every blocking SSL operation
+    // (handshake, read, write, close) gets dispatched to the IO
+    // TaskScheduler thread; the caller suspends until the worker
+    // resumes.
+    //
+    // Why a wrapper and not its own native: SslSocketStream already
+    // owns the AmiSSL/OpenSSL plumbing (SSL_CTX_new, SSL_connect,
+    // SSL_read, SSL_write, …) and its per-task AmiSSL bring-up. Doing
+    // each SSL call inside a TaskScheduler.IO task means everything
+    // happens on the IO worker task, which is the task that brought
+    // AmiSSL up via InitAmiSSL. So we get the right per-task state
+    // for free, no separate AmiSSL handling in this class.
+    //
+    // Single-IO-worker contract: TaskScheduler.IO is a single thread,
+    // so the handshake and every subsequent read/write all run on
+    // the same Amiga task. AmiSSL's per-task state, the SSL handle,
+    // BIOs, and the bsdsocket fd that backs the connection are all
+    // valid in that one task.
+    //
+    // Caller pattern (fused TCP-connect + TLS-handshake):
+    //
+    //   var ssl = AsyncSecureSocketStream.createAsync(host, 443, host)
+    //   var n   = ssl.readAsync(buf, 0L, 4096)
+    //   ssl.writeAsync(reqBytes, 0L, reqBytes.length())
+    //   ssl.closeAsync()
+    //
+    // Note: SslSocketStream's construct-does-handshake design means
+    // `new SslSocketStream(...)` is what triggers SSL_connect. We
+    // create that instance INSIDE the IO worker task in
+    // connectAsync's lambda so the handshake — and all subsequent
+    // operations — share the same task identity.
+    class AsyncSecureSocketStream
+    {
+        import Am.Lang
+        import Am.Async
+        import Am.Collections
+        import Am.Threading
+        import Am.Net
+
+        // Populated by the worker once the handshake completes. Reads
+        // and writes route through this instance from then on.
+        private var inner: SslSocketStream = null
+
+        // Per-call error stash. Like AsyncSocketStream, callers see this
+        // surfaced as a thrown Exception with the original message
+        // when the suspend resumes.
+        private var errorMessage: String = null
+
+        // Fused factory: create a TCP socket, connect it to
+        // `host:port`, and run the SSL handshake — all inside ONE
+        // IO-worker dispatch. Suspends the caller until the
+        // handshake completes (or fails). On success the returned
+        // stream's `inner` is populated and ready for readAsync /
+        // writeAsync. On failure throws Exception with the
+        // worker-side message.
+        //
+        // Why fused: the AmigaOS bsdsocket per-task slot bring-up
+        // (triggered inside `Socket.create()`) and the AmiSSL
+        // per-task `InitAmiSSL` (triggered inside
+        // `SslSocketStream`'s native init) need to happen on the
+        // same Amiga task. Doing them back-to-back in one task
+        // lambda guarantees that — there's no chance of a context
+        // switch landing them on different tasks.
+        //
+        // `hostName` is the SNI value sent in ClientHello — usually
+        // identical to `host` but kept distinct so callers can do
+        // proxy / SNI tricks if they ever need to.
+        static suspend fun createAsync(host: String, port: Int, hostName: String): AsyncSecureSocketStream {
+            var result = new AsyncSecureSocketStream()
+            suspend(cont) {
+                var task: () => Bool = () => {
+                    try {
+                        var raw = Socket.create(
+                            AddressFamily.inet,
+                            SocketType.stream,
+                            ProtocolFamily.unspecified)
+                        raw.connect(host, port)
+                        // SslSocketStream's constructor does the full
+                        // SSL_CTX_new / SSL_new / SSL_set_fd /
+                        // SSL_set_tlsext_host_name / SSL_connect chain.
+                        result.inner = new SslSocketStream(raw, hostName)
+                    } catch (e: Exception) {
+                        result.errorMessage = e.toString()
+                    }
+                    cont.resume()
+                    return true
+                }
+                TaskScheduler.schedule(TaskThreadType.IO, task)
+            }
+            if (result.errorMessage != null) {
+                throw new Exception("AsyncSecureSocketStream.createAsync failed: " + result.errorMessage)
+            }
+            return result
+        }
+
+        // Read up to `length` bytes into `buffer` at `offset`, on the
+        // IO worker. Returns the number of bytes actually read (per
+        // SSL_read semantics — could be less than length).
+        suspend fun readAsync(buffer: Byte[], offset: Long, length: Int): Int {
+            var holder = new AsyncSslReadResult()
+            var s = this.inner
+            suspend(cont) {
+                var task: () => Bool = () => {
+                    try {
+                        holder.result = s.read(buffer, offset, length)
+                    } catch (e: Exception) {
+                        holder.errorMessage = e.toString()
+                    }
+                    cont.resume()
+                    return true
+                }
+                TaskScheduler.schedule(TaskThreadType.IO, task)
+            }
+            if (holder.errorMessage != null) {
+                throw new Exception("AsyncSecureSocketStream.readAsync failed: " + holder.errorMessage)
+            }
+            return holder.result
+        }
+
+        // Write `length` bytes starting at `offset` in `buffer`, on the
+        // IO worker. SslSocketStream.write is void (it errors out by
+        // throwing); we mirror that here.
+        suspend fun writeAsync(buffer: Byte[], offset: Long, length: Int) {
+            var holder = new AsyncSslReadResult()
+            var s = this.inner
+            suspend(cont) {
+                var task: () => Bool = () => {
+                    try {
+                        s.write(buffer, offset, length)
+                    } catch (e: Exception) {
+                        holder.errorMessage = e.toString()
+                    }
+                    cont.resume()
+                    return true
+                }
+                TaskScheduler.schedule(TaskThreadType.IO, task)
+            }
+            if (holder.errorMessage != null) {
+                throw new Exception("AsyncSecureSocketStream.writeAsync failed: " + holder.errorMessage)
+            }
+        }
+
+        // Read until SSL_read returns 0 (server closed; standard for
+        // HTTP `Connection: close`), capped at `maxBytes` to avoid
+        // runaway memory. The drain loop runs ENTIRELY inside the IO
+        // worker task lambda — there's no suspend point inside the
+        // loop, so it doesn't trip the compiler-generated
+        // __while_breaking-not-saved-across-suspend bug that bit the
+        // per-byte AsyncStreamReader.readLineAsync path.
+        //
+        // Returns the accumulated bytes. Caller does HTTP parsing
+        // synchronously on the result — no more suspends involved.
+        suspend fun readToEndAsync(maxBytes: Int): UByte[] {
+            var holder = new AsyncBytesResult()
+            var s = this.inner
+            suspend(cont) {
+                var task: () => Bool = () => {
+                    try {
+                        var chunk = new Byte[4096]
+                        var out = List<UByte>.newList<UByte>()
+                        var totalRead = 0
+                        var keepReading = true
+                        while (keepReading) {
+                            var n = s.read(chunk, 0L, chunk.length())
+                            if (n <= 0) {
+                                keepReading = false
+                            } else {
+                                var i = 0
+                                while (i < n) {
+                                    out.add((chunk[i.toUInt()].toInt() & 0xFF).toUByte())
+                                    i = i + 1
+                                }
+                                totalRead = totalRead + n
+                                if (totalRead >= maxBytes) {
+                                    keepReading = false
+                                }
+                            }
+                        }
+                        holder.result = out.toArray()
+                    } catch (e: Exception) {
+                        holder.errorMessage = e.toString()
+                    }
+                    cont.resume()
+                    return true
+                }
+                TaskScheduler.schedule(TaskThreadType.IO, task)
+            }
+            if (holder.errorMessage != null) {
+                throw new Exception("AsyncSecureSocketStream.readToEndAsync failed: " + holder.errorMessage)
+            }
+            return holder.result
+        }
+
+        // Underlying SSL_shutdown + cleanup, dispatched to the IO
+        // worker so it runs on the same task that did the handshake
+        // (matters for AmiSSL's per-task SSL state).
+        //
+        // The underlying Socket fd is NOT closed here — but
+        // amisslauto's process-exit teardown handles the SSL session
+        // leftovers, and the per-task bsdsocket finalizer (registered
+        // by Socket.nativeInit on the IO worker) closes the fd's
+        // task-local library handle when the worker exits.
+        // Until SslSocketStream gains its own close, this is a stub
+        // that just preserves the API shape.
+        suspend fun closeAsync() {
+            // No-op until SslSocketStream.close() exists. Reaching for
+            // it now would just bake in a sync close on the caller's
+            // thread, which defeats the async surface. Until then,
+            // letting the Socket close take everything down works
+            // because amisslauto's process-exit teardown handles the
+            // SSL session leftovers.
+            //
+            // Kept as a suspend method so the public API stays stable
+            // when a real SslSocketStream.close lands.
+            var holder = new AsyncSslReadResult()
+            suspend(cont) {
+                var task: () => Bool = () => {
+                    cont.resume()
+                    return true
+                }
+                TaskScheduler.schedule(TaskThreadType.IO, task)
+            }
+            // holder is here only to keep the suspend body shape
+            // matching the others — once a real close exists, the
+            // try/catch slot lights up.
+            if (holder.errorMessage != null) {
+                throw new Exception("AsyncSecureSocketStream.closeAsync failed: " + holder.errorMessage)
+            }
+        }
+    }
+
+    // Per-call holder for AsyncSecureSocketStream's suspend I/O.
+    // Mirrors AsyncIoResult in am-net (separate type because SSL
+    // reads return Int, not UInt — matching SslSocketStream's surface
+    // and the Stream contract).
+    class AsyncSslReadResult {
+        import Am.Lang
+        var result: Int = 0
+        var errorMessage: String = null
+    }
+
+    // Per-call holder for readToEndAsync — separate from
+    // AsyncSslReadResult because the payload is a byte array, not an
+    // Int.
+    class AsyncBytesResult {
+        import Am.Lang
+        var result: UByte[] = null
+        var errorMessage: String = null
+    }
+}

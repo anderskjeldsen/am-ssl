@@ -14,6 +14,9 @@
 
 #include <amigaos/am_ssl_amissl_init.h>
 #include <stdio.h>
+#include <errno.h>
+#include <proto/socket.h>
+#include <sys/socket.h>
 
 function_result Am_Net_Ssl_SslPrivate_f_openSslInitialized_0(void);
 function_result Am_Net_Ssl_SslPrivate_f_setOpenSslInitialized_0(void);
@@ -48,22 +51,46 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
     int s;
     ssl_socket_stream_holder *holder;
 
+    printf("Ssl: enter __native_init_0\n"); fflush(stdout);
     if (this != NULL) {
         __increase_reference_count(this);
     }
+    printf("Ssl: about to call per-task ensure_initialised\n"); fflush(stdout);
+
+    // Per-task AmiSSL bring-up has to happen BEFORE any OpenSSL call
+    // (including OPENSSL_init_ssl below). amisslauto brought up the
+    // main task at constructor time; on a worker task, AmiSSL has no
+    // per-task slot for FindTask(NULL) and any OpenSSL function that
+    // dispatches through AmiSSL hangs (verified: OPENSSL_init_ssl on
+    // a worker without per-task AmiSSL silently never returns).
+    //
+    // Idempotent — no-op on the main task or on a worker already
+    // brought up. The Thread finalizer that
+    // `Am.Net.Ssl.SslSocketStream.nativeInit()` registers handles
+    // matching cleanup at task exit.
+    if (!am_ssl_amissl_ensure_initialised_for_current_task()) {
+        __throw_simple_exception("Failed to initialise AmiSSL on this task", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
+        goto __exit;
+    }
 
     {
+        printf("Ssl: openssl_state check\n"); fflush(stdout);
         function_result openssl_state = Am_Net_Ssl_SslPrivate_f_openSslInitialized_0();
         if (!openssl_state.return_value.value.bool_value) {
+            printf("Ssl: ensure_initialised (OpenSSL global)\n"); fflush(stdout);
             if (!am_ssl_amissl_ensure_initialised()) {
                 __throw_simple_exception("Failed to initialise AmiSSL", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
                 goto __exit;
             }
+            printf("Ssl: ensure_initialised done\n"); fflush(stdout);
             Am_Net_Ssl_SslPrivate_f_setOpenSslInitialized_0();
         }
     }
-
-    ssl_ctx = SSL_CTX_new(TLS_client_method());
+    printf("Ssl: TLS_client_method()\n"); fflush(stdout);
+    const SSL_METHOD *m = TLS_client_method();
+    printf("Ssl: TLS_client_method returned %p, SSL_CTX_new\n", (void *) m); fflush(stdout);
+    ssl_ctx = SSL_CTX_new(m);
+    printf("Ssl: SSL_CTX_new returned %p\n", (void *) ssl_ctx); fflush(stdout);
     if (ssl_ctx == NULL) {
         __throw_simple_exception("Failed to create SSL context", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __exit;
@@ -84,11 +111,28 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
 
     socket_obj = this->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_socket].nullable_value.value.object_value;
     s = socket_obj->object_properties.class_object_properties.object_data.value.int_value;
+    printf("Ssl: socket fd from AmLang holder = %d\n", s); fflush(stdout);
+
+    // Sanity check the fd is valid on THIS task before handing to AmiSSL.
+    // If getpeername fails here with EBADF, the fd is bad in this task's
+    // bsdsocket slot (e.g. socket was created on a different task) and
+    // SSL_connect would also fail. If getpeername succeeds, the fd is
+    // good and any later EBADF means AmiSSL is dispatching via the
+    // wrong SocketBase / wrong task.
+    {
+        struct sockaddr peer;
+        int peer_len = sizeof(peer);
+        int gp_rc = getpeername(s, &peer, &peer_len);
+        printf("Ssl: getpeername(fd=%d) returned %d (errno=%d)\n",
+               s, gp_rc, errno); fflush(stdout);
+    }
 
     if (!SSL_set_fd(ssl, s)) {
         __throw_simple_exception("Failed to set SSL file descriptor", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __fail3;
     }
+    printf("Ssl: SSL_set_fd(fd=%d) ok; SSL_get_fd reports %d\n",
+           s, SSL_get_fd(ssl)); fflush(stdout);
 
     host_name = this->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_hostName].nullable_value.value.object_value;
     host_name_string_holder = host_name->object_properties.class_object_properties.object_data.value.custom_value;
@@ -97,9 +141,12 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
         __throw_simple_exception("Failed to set SSL host name", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __fail4;
     }
+    printf("Ssl: SNI set to %s\n", host_name_string_holder->string_value); fflush(stdout);
 
     {
+        printf("Ssl: calling SSL_connect (fd=%d)\n", s); fflush(stdout);
         int connect_rc = SSL_connect(ssl);
+        printf("Ssl: SSL_connect returned %d\n", connect_rc); fflush(stdout);
         if (connect_rc != 1) {
             // Pull the most recent error off OpenSSL's per-thread error
             // queue so the exception message tells us *why* the handshake
@@ -109,16 +156,19 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
             // — printable ASCII, safe to embed in the exception text.
             unsigned long err_code = ERR_peek_last_error();
             int ssl_err = SSL_get_error(ssl, connect_rc);
+            int libc_errno = errno;
+            int task_errno = am_ssl_amissl_current_task_errno();
             char err_msg[256];
-            char details[320];
+            char details[384];
             if (err_code != 0) {
                 ERR_error_string_n(err_code, err_msg, sizeof(err_msg));
             } else {
                 snprintf(err_msg, sizeof(err_msg), "no OpenSSL error queued");
             }
             snprintf(details, sizeof(details),
-                     "SSL handshake failed: SSL_get_error=%d, %s",
-                     ssl_err, err_msg);
+                     "SSL handshake failed: SSL_get_error=%d, libc_errno=%d, amissl_task_errno=%d, %s",
+                     ssl_err, libc_errno, task_errno, err_msg);
+            printf("Ssl: %s\n", details); fflush(stdout);
             __throw_simple_exception(details, "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
             goto __fail4;
         }
@@ -258,6 +308,34 @@ __exit: ;
     }
     if (buffer != NULL) {
         __decrease_reference_count(buffer);
+    }
+    return __result;
+}
+
+// Dispatched by the Thread finalizer that
+// `Am.Net.Ssl.SslSocketStream.nativeInit()` registered. Runs from
+// inside the worker task that opened, so the FindTask(NULL) lookup in
+// am_ssl_amissl_close_for_current_task resolves to the right task.
+function_result Am_Net_Ssl_SslSocketStream_closeAmiSSLForThread_0(void)
+{
+    function_result __result = { .has_return_value = false };
+    am_ssl_amissl_close_for_current_task();
+    return __result;
+}
+
+// Force OPENSSL_init_ssl + RAND_seed to run on the calling task. Used
+// by application code that knows it will do SSL only from worker
+// threads — call from main to pre-warm so the worker doesn't trip on
+// the OPENSSL_init_ssl hang. Idempotent; flips the AmLang-side
+// `SslPrivate.openSslInitialized` flag so the regular
+// `SslSocketStream._native_init_0` lazy path becomes a no-op.
+function_result Am_Net_Ssl_SslSocketStream_warmCurrentTask_0(void)
+{
+    function_result __result = { .has_return_value = false };
+    function_result openssl_state = Am_Net_Ssl_SslPrivate_f_openSslInitialized_0();
+    if (!openssl_state.return_value.value.bool_value) {
+        am_ssl_amissl_ensure_initialised();
+        Am_Net_Ssl_SslPrivate_f_setOpenSslInitialized_0();
     }
     return __result;
 }

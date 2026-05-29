@@ -4,23 +4,29 @@ version: 1.0.0
 type: application
 dependencies:
   - id: am-lang-core
-    realm: github
-    type: git-repo
-    tag: latest
-    branch: master
-    url: https://github.com/anderskjeldsen/am-lang-core.git
+#    realm: github
+#    type: git-repo
+#    tag: latest
+#    branch: master
+#    url: https://github.com/anderskjeldsen/am-lang-core.git
+    type: local
+    path: ../../../am-lang-core
   - id: am-net
-    realm: github
-    type: git-repo
-    tag: latest
-    branch: master
-    url: https://github.com/anderskjeldsen/am-net.git
+#    realm: github
+#    type: git-repo
+#    tag: latest
+#    branch: master
+#    url: https://github.com/anderskjeldsen/am-net.git
+    type: local
+    path: ../../../am-net
   - id: am-ssl
-    realm: github
-    type: git-repo
-    tag: latest
-    branch: master
-    url: https://github.com/anderskjeldsen/am-ssl.git
+#    realm: github
+#    type: git-repo
+#    tag: latest
+#    branch: master
+#    url: https://github.com/anderskjeldsen/am-ssl.git
+    type: local
+    path: ../../
 platforms:
   - id: libc
     abstract: true

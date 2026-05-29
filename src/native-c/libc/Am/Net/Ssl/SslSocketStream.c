@@ -212,3 +212,20 @@ __exit: ;
 	}
 	return __result;
 };
+
+// No-op on libc backends — per-task AmiSSL cleanup is amigaos / morphos-ppc
+// only. The AmLang lambda that targets this symbol compiles for every
+// platform but only the amigaos / morphos-ppc native init paths actually
+// register a finalizer that fires it.
+function_result Am_Net_Ssl_SslSocketStream_closeAmiSSLForThread_0(void)
+{
+	function_result __result = { .has_return_value = false };
+	return __result;
+}
+
+// No-op on libc. OpenSSL global init from any thread works fine there.
+function_result Am_Net_Ssl_SslSocketStream_warmCurrentTask_0(void)
+{
+	function_result __result = { .has_return_value = false };
+	return __result;
+}
