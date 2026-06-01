@@ -118,12 +118,13 @@ buildTargets:
     platform: linux-x64
   - id: morphos-ppc_docker
     platform: morphos-ppc
-    commands:
-      - docker run --rm -v "${build_dir}":/work -e USER=$( id -u ) -e GROUP=$( id -g ) -it amigadev/crosstools:ppc-morphos make -f morphos_ppc.makefile -C /work all
-  - id: morphos-ppc_docker_win
-    platform: morphos-ppc
-    commands:
-      - docker run --rm -v "${build_dir}":/work -e -i amigadev/crosstools:ppc-morphos make -f morphos-ppc.makefile -C /work all
+    # Same dockerBuild shape as am-net / am-ui / am-ide. The previous
+    # `commands:` form invoked `id` inside a shell expansion which
+    # amlc didn't expand, so the daemon tried to pull `image: id` and
+    # failed.
+    dockerBuild:
+      image: amigadev/crosstools:ppc-morphos
+      buildPath: /work
   - id: aros-x86-64_docker_win
     platform: aros-x86-64
     commands: 

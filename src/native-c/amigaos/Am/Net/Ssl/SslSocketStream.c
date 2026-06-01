@@ -121,7 +121,12 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
     // wrong SocketBase / wrong task.
     {
         struct sockaddr peer;
-        int peer_len = sizeof(peer);
+        // socklen_t (not plain int) — the bsdsocket prototype takes a
+        // long-typed pointer for the length arg, and `int *` and
+        // `long *` are distinct pointer types under gcc even when
+        // both are 32 bits on m68k. Using socklen_t matches Socket.c
+        // and silences -Wincompatible-pointer-types.
+        socklen_t peer_len = sizeof(peer);
         int gp_rc = getpeername(s, &peer, &peer_len);
         printf("Ssl: getpeername(fd=%d) returned %d (errno=%d)\n",
                s, gp_rc, errno); fflush(stdout);

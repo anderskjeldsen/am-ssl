@@ -230,3 +230,20 @@ __exit: ;
     }
     return __result;
 }
+
+// MorphOS port: no AmiSSL — the build links openssl.library directly,
+// so there's no per-task bring-up the way m68k+AmiSSL needs. The
+// SslSocketStream.aml class still declares these natives (called from
+// the Thread finalizer / main pre-warm), so stub them out to satisfy
+// the linker.
+function_result Am_Net_Ssl_SslSocketStream_closeAmiSSLForThread_0(void)
+{
+    function_result __result = { .has_return_value = false };
+    return __result;
+}
+
+function_result Am_Net_Ssl_SslSocketStream_warmCurrentTask_0(void)
+{
+    function_result __result = { .has_return_value = false };
+    return __result;
+}
