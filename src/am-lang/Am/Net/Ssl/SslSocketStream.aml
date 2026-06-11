@@ -10,9 +10,9 @@ namespace Am.Net.Ssl
         import Am.Net
         import Am.Threading
 
-        native fun read(buffer: Byte[], offset: Long, length: Int): Int
+        native fun read(buffer: UByte[], offset: Long, length: UInt): UInt
 
-        native fun write(buffer: Byte[], offset: Long, length: Int)
+        native fun write(buffer: UByte[], offset: Long, length: UInt)
 
         fun seekFromStart(offset: Long) {
             throw new Exception("Not supported")

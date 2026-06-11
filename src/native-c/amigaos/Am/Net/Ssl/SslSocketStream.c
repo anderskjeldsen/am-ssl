@@ -238,7 +238,7 @@ __exit: ;
     return __result;
 }
 
-function_result Am_Net_Ssl_SslSocketStream_read_0(aobject * const this, aobject * buffer, long long offset, int length)
+function_result Am_Net_Ssl_SslSocketStream_read_0(aobject * const this, aobject * buffer, long long offset, unsigned int length)
 {
     function_result __result = { .has_return_value = true };
     bool __returning = false;
@@ -278,7 +278,7 @@ __exit: ;
     return __result;
 }
 
-function_result Am_Net_Ssl_SslSocketStream_write_0(aobject * const this, aobject * buffer, long long offset, int length)
+function_result Am_Net_Ssl_SslSocketStream_write_0(aobject * const this, aobject * buffer, long long offset, unsigned int length)
 {
     function_result __result = { .has_return_value = false };
     bool __returning = false;

@@ -43,12 +43,12 @@ namespace Am.Net.Ssl
 
         // Populated by the worker once the handshake completes. Reads
         // and writes route through this instance from then on.
-        private var inner: SslSocketStream = null
+        private var inner: SslSocketStream? = null
 
         // Per-call error stash. Like AsyncSocketStream, callers see this
         // surfaced as a thrown Exception with the original message
         // when the suspend resumes.
-        private var errorMessage: String = null
+        private var errorMessage: String? = null
 
         // Fused factory: create a TCP socket, connect it to
         // `host:port`, and run the SSL handshake — all inside ONE
@@ -240,7 +240,7 @@ namespace Am.Net.Ssl
     class AsyncSslReadResult {
         import Am.Lang
         var result: Int = 0
-        var errorMessage: String = null
+        var errorMessage: String? = null
     }
 
     // Per-call holder for readToEndAsync — separate from
@@ -248,7 +248,7 @@ namespace Am.Net.Ssl
     // Int.
     class AsyncBytesResult {
         import Am.Lang
-        var result: UByte[] = null
-        var errorMessage: String = null
+        var result: UByte[]? = null
+        var errorMessage: String? = null
     }
 }
