@@ -13,6 +13,7 @@
 #include <libc/core_inline_functions.h>
 
 #include <stdio.h>
+#include <errno.h>
 
 function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
 {
@@ -58,6 +59,8 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
         __throw_simple_exception("Failed to set SSL file descriptor", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __fail3;
     }
+    printf("Ssl: SSL_set_fd(fd=%d) ok; SSL_get_fd reports %d\n",
+           s, SSL_get_fd(ssl)); fflush(stdout);
 
     host_name = this->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_hostName].nullable_value.value.object_value;
     host_name_string_holder = host_name->object_properties.class_object_properties.object_data.value.custom_value;
@@ -66,9 +69,12 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
         __throw_simple_exception("Failed to set SSL host name", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __fail4;
     }
+    printf("Ssl: SNI set to %s\n", host_name_string_holder->string_value); fflush(stdout);
 
     {
+        printf("Ssl: calling SSL_connect (fd=%d)\n", s); fflush(stdout);
         int connect_rc = SSL_connect(ssl);
+        printf("Ssl: SSL_connect returned %d\n", connect_rc); fflush(stdout);
         if (connect_rc != 1) {
             // Pull the most recent error off OpenSSL's per-thread error
             // queue so the exception message tells us *why* the handshake
@@ -78,6 +84,7 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
             // — printable ASCII, safe to embed in the exception text.
             unsigned long err_code = ERR_peek_last_error();
             int ssl_err = SSL_get_error(ssl, connect_rc);
+            int libc_errno = errno;
             char err_msg[256];
             char details[320];
             if (err_code != 0) {
@@ -86,8 +93,9 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
                 snprintf(err_msg, sizeof(err_msg), "no OpenSSL error queued");
             }
             snprintf(details, sizeof(details),
-                     "SSL handshake failed: SSL_get_error=%d, %s",
-                     ssl_err, err_msg);
+                     "SSL handshake failed: SSL_get_error=%d, libc_errno=%d, %s",
+                     ssl_err, libc_errno, err_msg);
+            printf("Ssl: %s\n", details); fflush(stdout);
             __throw_simple_exception(details, "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
             goto __fail4;
         }
@@ -152,7 +160,7 @@ __exit: ;
     return __result;
 }
 
-function_result Am_Net_Ssl_SslSocketStream_read_0(aobject * const this, aobject * buffer, long long offset, int length)
+function_result Am_Net_Ssl_SslSocketStream_read_0(aobject * const this, aobject * buffer, long long offset, unsigned int length)
 {
     function_result __result = { .has_return_value = true };
     bool __returning = false;
@@ -192,7 +200,7 @@ __exit: ;
     return __result;
 }
 
-function_result Am_Net_Ssl_SslSocketStream_write_0(aobject * const this, aobject * buffer, long long offset, int length)
+function_result Am_Net_Ssl_SslSocketStream_write_0(aobject * const this, aobject * buffer, long long offset, unsigned int length)
 {
     function_result __result = { .has_return_value = false };
     bool __returning = false;
