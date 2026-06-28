@@ -57,9 +57,17 @@ platforms:
   - id: linux-x64
     extends: libc
     gccCommand: gcc
+  - id: linux-ppc32
+    extends: libc
+    gccCommand: powerpc-linux-gnu-gcc -O1
+    gccAdditionalOptions:
+      - -pthread
     gccAdditionalLibraries:
       - ssl
       - crypto
+  - id: linux-ppc64
+    extends: linux-ppc32
+    gccCommand: powerpc-linux-gnu-gcc -O2
   - id: macos
     extends: libc
     gccCommand: gcc -O3
