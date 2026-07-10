@@ -58,10 +58,17 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
 		goto __fail2;
     }
 
+	// __unwrap for every aobject data deref: `this`, `socket`, and
+	// `host_name` may all be cross-thread wrappers (class_ptr == NULL,
+	// properties[] aliased with an unrelated union variant). Raw
+	// derefs would read the wrapper's slot, not the real object's, and
+	// SSL_CTX_new/SSL_set_fd would get a zero fd + NULL host name.
+	// See feedback_amlang_native_unwrap_cross_thread.
+	aobject * const this_r = __unwrap(this);
 	// get socket object
-	aobject * const socket = this->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_socket].nullable_value.value.object_value;
+	aobject * const socket = __unwrap(this_r->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_socket].nullable_value.value.object_value);
 	// get socket fd
-	int s = socket->object_properties.class_object_properties.object_data.value.int_value;
+	int s = __unwrap(socket)->object_properties.class_object_properties.object_data.value.int_value;
 
     if (!SSL_set_fd(ssl, s)) {
 		__throw_simple_exception("Failed to set SSL file descriptor", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
@@ -69,9 +76,9 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
     }	
 
 	// get host name
-	aobject * const host_name = this->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_hostName].nullable_value.value.object_value;
+	aobject * const host_name = __unwrap(this_r->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_hostName].nullable_value.value.object_value);
 	// get host name string_holder
-	string_holder * const host_name_string_holder = host_name->object_properties.class_object_properties.object_data.value.custom_value;
+	string_holder * const host_name_string_holder = __unwrap(host_name)->object_properties.class_object_properties.object_data.value.custom_value;
 
 	if (!SSL_set_tlsext_host_name(ssl, host_name_string_holder->string_value)) {
 		__throw_simple_exception("Failed to set SSL host name", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
@@ -99,7 +106,7 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
 	holder->ssl_ctx = ssl_ctx;
 	holder->ssl = ssl;
 	holder->cert = cert;
-	this->object_properties.class_object_properties.object_data.value.custom_value = holder;
+	__unwrap(this)->object_properties.class_object_properties.object_data.value.custom_value = holder;
 
 	goto __exit;
 __fail5: ;
@@ -122,7 +129,7 @@ function_result Am_Net_Ssl_SslSocketStream__native_release_0(aobject * const thi
 	function_result __result = { .has_return_value = false };
 	bool __returning = false;
 
-	ssl_socket_stream_holder *holder = this->object_properties.class_object_properties.object_data.value.custom_value;
+	ssl_socket_stream_holder *holder = __unwrap(this)->object_properties.class_object_properties.object_data.value.custom_value;
 
 	if (holder != NULL) {
 		X509_free(holder->cert);
@@ -153,10 +160,10 @@ function_result Am_Net_Ssl_SslSocketStream_read_0(aobject * const this, aobject 
 	if (buffer != NULL) {
 		__increase_reference_count(buffer);
 	}
-	ssl_socket_stream_holder *holder = this->object_properties.class_object_properties.object_data.value.custom_value;
+	ssl_socket_stream_holder *holder = __unwrap(this)->object_properties.class_object_properties.object_data.value.custom_value;
 
 	if (holder != NULL) {
-				array_holder *array_holder = buffer->object_properties.class_object_properties.object_data.value.custom_value;
+				array_holder *array_holder = __unwrap(buffer)->object_properties.class_object_properties.object_data.value.custom_value;
 
 		if (length > array_holder->size) {
 			__throw_simple_exception("Receive length is bigger than array", "in Am_IO_Networking_Socket_send_0", &__result);
@@ -189,10 +196,10 @@ function_result Am_Net_Ssl_SslSocketStream_write_0(aobject * const this, aobject
 	if (buffer != NULL) {
 		__increase_reference_count(buffer);
 	}
-	ssl_socket_stream_holder *holder = this->object_properties.class_object_properties.object_data.value.custom_value;
+	ssl_socket_stream_holder *holder = __unwrap(this)->object_properties.class_object_properties.object_data.value.custom_value;
 
 	if (holder != NULL) {
-		array_holder *array_holder = buffer->object_properties.class_object_properties.object_data.value.custom_value;
+		array_holder *array_holder = __unwrap(buffer)->object_properties.class_object_properties.object_data.value.custom_value;
 
 		if (length > array_holder->size) {
 			__throw_simple_exception("Send length is bigger than array", "in Am_IO_Networking_Socket_send_0", &__result);
