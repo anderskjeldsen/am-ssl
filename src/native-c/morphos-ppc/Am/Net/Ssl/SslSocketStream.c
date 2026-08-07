@@ -62,8 +62,8 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
         __throw_simple_exception("Failed to set SSL file descriptor", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __fail3;
     }
-    printf("Ssl: SSL_set_fd(fd=%d) ok; SSL_get_fd reports %d\n",
-           s, SSL_get_fd(ssl)); fflush(stdout);
+    // printf("Ssl: SSL_set_fd(fd=%d) ok; SSL_get_fd reports %d\n",
+    //        s, SSL_get_fd(ssl)); fflush(stdout);
 
     host_name = __unwrap(__unwrap(this)->object_properties.class_object_properties.properties[Am_Net_Ssl_SslSocketStream_P_hostName].nullable_value.value.object_value);
     host_name_string_holder = __unwrap(host_name)->object_properties.class_object_properties.object_data.value.custom_value;
@@ -72,12 +72,12 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
         __throw_simple_exception("Failed to set SSL host name", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
         goto __fail4;
     }
-    printf("Ssl: SNI set to %s\n", host_name_string_holder->string_value); fflush(stdout);
+    // printf("Ssl: SNI set to %s\n", host_name_string_holder->string_value); fflush(stdout);
 
     {
-        printf("Ssl: calling SSL_connect (fd=%d)\n", s); fflush(stdout);
+        // printf("Ssl: calling SSL_connect (fd=%d)\n", s); fflush(stdout);
         int connect_rc = SSL_connect(ssl);
-        printf("Ssl: SSL_connect returned %d\n", connect_rc); fflush(stdout);
+        // printf("Ssl: SSL_connect returned %d\n", connect_rc); fflush(stdout);
         if (connect_rc != 1) {
             // Pull the most recent error off OpenSSL's per-thread error
             // queue so the exception message tells us *why* the handshake
@@ -98,7 +98,7 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
             snprintf(details, sizeof(details),
                      "SSL handshake failed: SSL_get_error=%d, libc_errno=%d, %s",
                      ssl_err, libc_errno, err_msg);
-            printf("Ssl: %s\n", details); fflush(stdout);
+            // printf("Ssl: %s\n", details); fflush(stdout);
             __throw_simple_exception(details, "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
             goto __fail4;
         }
