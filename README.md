@@ -95,16 +95,12 @@ For smaller MorphOS binaries, use shared OpenSSL linkage (`-lssl_shared -lcrypto
 
 ### macOS Setup
 
-On macOS, you need to create a symbolic link to your OpenSSL installation:
+On macOS, OpenSSL is picked up directly from the Homebrew install
+(`/opt/homebrew/opt/openssl` — see the macOS platforms in `package.yml`),
+so the only setup needed is:
 
 ```bash
-# For Intel Macs
-cd c-libs
-./create_openssl_link_mac.sh
-
-# For Apple Silicon Macs
-cd c-libs
-./create_openssl_link_mac_silicon.sh
+brew install openssl@3
 ```
 
 ### Building from Examples
