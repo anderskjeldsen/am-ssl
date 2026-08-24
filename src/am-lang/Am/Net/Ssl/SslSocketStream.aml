@@ -37,6 +37,7 @@ namespace Am.Net.Ssl
         // inside the same task — that's what AmiSSL tracks via
         // `FindTask(NULL)`. Mirror of `Am.Net.Socket.nativeInit`; same
         // private-by-convention rule applies.
+        #nativeEntry
         private static fun nativeInit() {
             var t = Thread.getCurrent()
             if (t != null) {

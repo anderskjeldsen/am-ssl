@@ -5,6 +5,7 @@ namespace Am.Net.Ssl
     {
         import Am.Lang
 
+        #nativeEntry
         private static fun openSslInitialized(): Bool {
             if (!Runtime.has("openssl-initialized")) {
                 return false
@@ -12,6 +13,7 @@ namespace Am.Net.Ssl
             return Runtime.get("openssl-initialized") == "true"
         }
 
+        #nativeEntry
         private static fun setOpenSslInitialized() {
             Runtime.set("openssl-initialized", "true")
         }
