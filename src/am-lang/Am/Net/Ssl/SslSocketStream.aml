@@ -2,7 +2,7 @@
 namespace Am.Net.Ssl
 {
 
-    #implementationPlatforms "libc", "amigaos", "morphos-ppc"
+    #implementationPlatforms "libc", "amigaos", "morphos-ppc", "aros-arm64"
     native class SslSocketStream(private var socket: Socket, private var hostName: String) : Stream
     {
         import Am.Lang

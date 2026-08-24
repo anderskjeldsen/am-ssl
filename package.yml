@@ -108,7 +108,19 @@ platforms:
     gccCommand: gcc
     gccAdditionalOptions:
       - -noixemul
+  - id: aros-arm64
+    extends: libc
+    gccCommand: aarch64-aros-gcc -O2
+    gccAdditionalOptions:
+      - -pthread
+    additionalLinkerFlags:
+      - -pthread
 buildTargets:
+  - id: aros-arm64-docker
+    platform: aros-arm64
+    dockerBuild:
+      image: aros-arm64-dev:sdk
+      buildPath: /host
   - id: amigaos_docker
     platform: amigaos
     dockerBuild:
