@@ -108,8 +108,13 @@ platforms:
     gccCommand: gcc
     gccAdditionalOptions:
       - -noixemul
-  - id: aros-arm64
+  # Shared AROS base (all architectures) — see am-lang-core's `aros`.
+  - id: aros
+    abstract: true
     extends: libc
+
+  - id: aros-arm64
+    extends: aros
     gccCommand: aarch64-aros-gcc -O2
     gccAdditionalOptions:
       - -pthread

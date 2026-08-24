@@ -1,6 +1,6 @@
 #include <libc/core.h>
 #include <Am/Net/Ssl/SslSocketStream.h>
-#include <aros-arm64/Am/Net/Ssl/SslSocketStream.h>
+#include <aros/Am/Net/Ssl/SslSocketStream.h>
 #include <Am/IO/Stream.h>
 #include <Am/Lang/Object.h>
 #include <Am/Net/Socket.h>
