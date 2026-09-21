@@ -17,14 +17,23 @@
 // against, so this platform gets an explicit unsupported implementation
 // instead of the libc/OpenSSL one.
 //
-// Every entry point either succeeds as a no-op (lifecycle) or throws so a
-// caller trying to speak TLS fails loudly at the first read/write rather than
-// silently exchanging plaintext. Swap this file for a real port once an
-// aarch64-aros OpenSSL (or an AROS AmiSSL equivalent) exists — the AmLang side
-// needs no changes.
-
-static const char * const AM_AROS_NO_TLS =
-	"TLS is not available on AROS aarch64 (no target OpenSSL build)";
+// PLACEHOLDER, BY REQUEST: every entry point is inert. Nothing throws, nothing
+// is required to link, and no TLS library is referenced — the point is simply
+// to let AROS builds complete while a real implementation is still being
+// worked out.
+//
+// Read reports 0 bytes (which callers see as end-of-stream) and write silently
+// discards. That means a TLS connection FAILS QUIETLY rather than erroring:
+// deliberate for now, but it is the thing to remember when something that
+// should have used https just returns nothing on AROS.
+//
+// An earlier version threw on read/write so the failure was loud. If you want
+// that back while still requiring no libraries, restore __throw_simple_exception
+// here — the AmLang side needs no changes either way, and neither does the
+// build, since this platform links no SSL libs at all.
+//
+// Swap this file for a real port once an aarch64-aros OpenSSL (or an AROS
+// AmiSSL equivalent) exists.
 
 function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
 {
@@ -52,14 +61,18 @@ function_result Am_Net_Ssl_SslSocketStream__native_mark_children_0(aobject * con
 function_result Am_Net_Ssl_SslSocketStream_read_0(aobject * const this, aobject * buffer, long long offset, unsigned int length)
 {
 	function_result __result = { .has_return_value = true };
-	__throw_simple_exception(AM_AROS_NO_TLS, "in Am_Net_Ssl_SslSocketStream_read_0", &__result);
+	(void) this; (void) buffer; (void) offset; (void) length;
+	// 0 = nothing read; callers treat it as end-of-stream.
+	__result.return_value.value.int_value = 0;
+	__result.return_value.flags = PRIMITIVE_INT;
 	return __result;
 }
 
 function_result Am_Net_Ssl_SslSocketStream_write_0(aobject * const this, aobject * buffer, long long offset, unsigned int length)
 {
 	function_result __result = { .has_return_value = false };
-	__throw_simple_exception(AM_AROS_NO_TLS, "in Am_Net_Ssl_SslSocketStream_write_0", &__result);
+	(void) this; (void) buffer; (void) offset; (void) length;
+	// Silently discarded.
 	return __result;
 }
 

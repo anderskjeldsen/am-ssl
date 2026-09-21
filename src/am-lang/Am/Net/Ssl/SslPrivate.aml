@@ -1,6 +1,8 @@
 
 namespace Am.Net.Ssl
 {
+    // Its accessors are called from native C (SslSocketStream.c), invisible to the tree-shaker.
+    #compileAlways
     class SslPrivate
     {
         import Am.Lang

@@ -165,12 +165,12 @@ function_result Am_Net_Ssl_SslSocketStream_read_0(aobject * const this, aobject 
 	if (holder != NULL) {
 				array_holder *array_holder = __unwrap(buffer)->object_properties.class_object_properties.object_data.value.custom_value;
 
-		if (length > array_holder->size) {
+		if ((unsigned long long) offset + length > array_holder->size) {
 			__throw_simple_exception("Receive length is bigger than array", "in Am_IO_Networking_Socket_send_0", &__result);
 			goto __exit;
 		}
 
-		int received = SSL_read(holder->ssl, array_holder->array_data, length);
+		int received = SSL_read(holder->ssl, ((unsigned char *) array_holder->array_data) + offset, length);
 		__result.return_value.value.int_value = received;
 		__result.return_value.flags = PRIMITIVE_INT;
 		__returning = true;
@@ -201,12 +201,12 @@ function_result Am_Net_Ssl_SslSocketStream_write_0(aobject * const this, aobject
 	if (holder != NULL) {
 		array_holder *array_holder = __unwrap(buffer)->object_properties.class_object_properties.object_data.value.custom_value;
 
-		if (length > array_holder->size) {
+		if ((unsigned long long) offset + length > array_holder->size) {
 			__throw_simple_exception("Send length is bigger than array", "in Am_IO_Networking_Socket_send_0", &__result);
 			__returning = true;
 			goto __exit;
 		}
-		int sent = SSL_write(holder->ssl, array_holder->array_data, length);
+		int sent = SSL_write(holder->ssl, ((unsigned char *) array_holder->array_data) + offset, length);
 		__result.return_value.value.int_value = sent;
 		__result.return_value.flags = PRIMITIVE_UINT;
 	}
