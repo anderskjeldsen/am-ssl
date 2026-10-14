@@ -74,6 +74,14 @@ function_result Am_Net_Ssl_SslSocketStream__native_init_0(aobject * const this)
     }
     // printf("Ssl: SNI set to %s\n", host_name_string_holder->string_value); fflush(stdout);
 
+    /* Validate the configured server identity as well as its CA chain.
+       The IP parser returns 0 for DNS names, which use hostname matching. */
+    if (X509_VERIFY_PARAM_set1_ip_asc(SSL_get0_param(ssl), host_name_string_holder->string_value) != 1 &&
+        SSL_set1_host(ssl, host_name_string_holder->string_value) != 1) {
+        __throw_simple_exception("Failed to configure TLS server identity verification", "in Am_Net_Ssl_SslSocketStream__native_init_0", &__result);
+        goto __fail4;
+    }
+
     {
         // printf("Ssl: calling SSL_connect (fd=%d)\n", s); fflush(stdout);
         int connect_rc = SSL_connect(ssl);
